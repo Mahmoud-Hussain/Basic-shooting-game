@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top-Down Shooter</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #000;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    canvas {
+      display: block;
+    }
+    #gameOver {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    #timer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="gameOver">
+    <h1>Game Over!</h1>
+    <p>You survived for <span id="survivalTime">0</span> seconds.</p>
+    <button onclick="restartGame()">Restart</button>
+  </div>
+  <div id="timer">Time: 0s</div>
+  <script src="game.js"></script>
+</body>
+</html>
