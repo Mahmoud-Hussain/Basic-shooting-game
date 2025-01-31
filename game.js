@@ -28,6 +28,9 @@ const bulletSpeed = 7;
 const enemies = [];
 const baseEnemySpeed = 2;
 
+// Explosions
+const explosions = [];
+
 // Handle player movement
 const keys = {
   ArrowUp: false,
@@ -148,6 +151,84 @@ function drawGun() {
   ctx.closePath();
 }
 
+// Player animation (pulsating effect)
+let pulseDirection = 1; // 1 for growing, -1 for shrinking
+
+function drawPlayer() {
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+  ctx.fillStyle = player.color;
+  ctx.fill();
+  ctx.closePath();
+
+  // Pulsating effect
+  if (player.radius >= 25) pulseDirection = -1;
+  if (player.radius <= 15) pulseDirection = 1;
+  player.radius += 0.1 * pulseDirection;
+}
+
+// Bullet animation (trail effect)
+function drawBullet(bullet) {
+  // Draw bullet
+  ctx.beginPath();
+  ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
+  ctx.fillStyle = bullet.color;
+  ctx.fill();
+  ctx.closePath();
+
+  // Trail effect
+  ctx.beginPath();
+  ctx.moveTo(bullet.x - bullet.dx * 5, bullet.y - bullet.dy * 5);
+  ctx.lineTo(bullet.x, bullet.y);
+  ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.closePath();
+}
+
+// Enemy animation (wobble effect)
+function drawEnemy(enemy) {
+  // Wobble effect
+  enemy.x += Math.sin(Date.now() * 0.01) * 0.5;
+  enemy.y += Math.cos(Date.now() * 0.01) * 0.5;
+
+  // Draw enemy
+  ctx.beginPath();
+  ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+  ctx.fillStyle = enemy.color;
+  ctx.fill();
+  ctx.closePath();
+}
+
+// Explosion animation
+function createExplosion(x, y) {
+  explosions.push({
+    x,
+    y,
+    radius: 10,
+    maxRadius: 30,
+    color: 'orange',
+    alpha: 1,
+  });
+}
+
+function drawExplosions() {
+  explosions.forEach((explosion, index) => {
+    explosion.radius += 1;
+    explosion.alpha -= 0.05;
+
+    ctx.beginPath();
+    ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 165, 0, ${explosion.alpha})`;
+    ctx.fill();
+    ctx.closePath();
+
+    if (explosion.alpha <= 0) {
+      explosions.splice(index, 1);
+    }
+  });
+}
+
 // Game loop
 function gameLoop() {
   if (!gameOver) {
@@ -156,11 +237,7 @@ function gameLoop() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw player
-    ctx.beginPath();
-    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-    ctx.fillStyle = player.color;
-    ctx.fill();
-    ctx.closePath();
+    drawPlayer();
 
     // Draw gun
     drawGun();
@@ -185,11 +262,7 @@ function gameLoop() {
       }
 
       // Draw bullet
-      ctx.beginPath();
-      ctx.arc(bullet.x, bullet.y, bullet.radius, 0, Math.PI * 2);
-      ctx.fillStyle = bullet.color;
-      ctx.fill();
-      ctx.closePath();
+      drawBullet(bullet);
     });
 
     // Draw and move enemies
@@ -198,18 +271,29 @@ function gameLoop() {
       enemy.y += enemy.dy;
 
       // Draw enemy
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-      ctx.fillStyle = enemy.color;
-      ctx.fill();
-      ctx.closePath();
+      drawEnemy(enemy);
 
       // Check collision with player
       const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
       if (dist < player.radius + enemy.radius) {
         endGame();
       }
+
+      // Check collision with bullets
+      bullets.forEach((bullet, bulletIndex) => {
+        const bulletDist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+        if (bulletDist < bullet.radius + enemy.radius) {
+          // Remove enemy and bullet
+          enemies.splice(index, 1);
+          bullets.splice(bulletIndex, 1);
+          // Create explosion
+          createExplosion(enemy.x, enemy.y);
+        }
+      });
     });
+
+    // Draw explosions
+    drawExplosions();
 
     // Spawn enemies
     if (Math.random() < enemySpawnRate) {
