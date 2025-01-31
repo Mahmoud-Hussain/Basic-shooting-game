@@ -9,6 +9,7 @@ let startTime = Date.now();
 let survivalTime = 0;
 let enemySpawnRate = 0.02; // Initial spawn rate
 let enemySpeedMultiplier = 1; // Initial speed multiplier
+let round = 1; // Current round
 
 // Player
 const player = {
@@ -30,6 +31,14 @@ const baseEnemySpeed = 2;
 
 // Explosions
 const explosions = [];
+
+// Boss
+let boss = null;
+const bossSpawnTime = 20; // Spawn boss after 20 seconds
+const bossHealth = 10; // Boss health
+const bossBulletSpeed = 5; // Speed of boss bullets
+let bossAttackInterval = 2000; // Boss attacks every 2 seconds
+let lastBossAttack = Date.now();
 
 // Handle player movement
 const keys = {
@@ -112,6 +121,20 @@ function spawnEnemy() {
   });
 }
 
+// Spawn boss
+function spawnBoss() {
+  boss = {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    radius: 50,
+    color: 'purple',
+    dx: 2,
+    dy: 2,
+    health: bossHealth * round, // Boss health increases with each round
+    maxHealth: bossHealth * round, // Store max health for health bar
+  };
+}
+
 // Update timer
 function updateTimer() {
   if (!gameOver) {
@@ -121,6 +144,12 @@ function updateTimer() {
     // Increase difficulty over time
     enemySpawnRate = 0.02 + survivalTime * 0.001; // Increase spawn rate
     enemySpeedMultiplier = 1 + survivalTime * 0.01; // Increase speed
+
+    // Spawn boss after 20 seconds and clear enemies
+    if (survivalTime >= bossSpawnTime && !boss) {
+      enemies.length = 0; // Clear all enemies
+      spawnBoss();
+    }
   }
 }
 
@@ -200,6 +229,87 @@ function drawEnemy(enemy) {
   ctx.closePath();
 }
 
+// Draw boss health bar
+function drawBossHealthBar() {
+  if (boss) {
+    const barWidth = 200;
+    const barHeight = 20;
+    const x = boss.x - barWidth / 2;
+    const y = boss.y - boss.radius - 30;
+
+    // Draw background
+    ctx.fillStyle = 'black';
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    // Draw health
+    const healthWidth = (boss.health / boss.maxHealth) * barWidth;
+    ctx.fillStyle = 'red';
+    ctx.fillRect(x, y, healthWidth, barHeight);
+  }
+}
+
+// Boss animation
+function drawBoss() {
+  if (boss) {
+    // Draw boss
+    ctx.beginPath();
+    ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+    ctx.fillStyle = boss.color;
+    ctx.fill();
+    ctx.closePath();
+
+    // Move boss
+    boss.x += boss.dx;
+    boss.y += boss.dy;
+
+    // Bounce off walls
+    if (boss.x + boss.radius > canvas.width || boss.x - boss.radius < 0) {
+      boss.dx *= -1;
+    }
+    if (boss.y + boss.radius > canvas.height || boss.y - boss.radius < 0) {
+      boss.dy *= -1;
+    }
+
+    // Boss shooting
+    if (Date.now() - lastBossAttack > bossAttackInterval) {
+      const angle = Math.atan2(player.y - boss.y, player.x - boss.x);
+      bullets.push({
+        x: boss.x,
+        y: boss.y,
+        dx: Math.cos(angle) * bossBulletSpeed,
+        dy: Math.sin(angle) * bossBulletSpeed,
+        radius: 5,
+        color: 'red',
+      });
+      lastBossAttack = Date.now();
+    }
+
+    // Check collision with player bullets
+    bullets.forEach((bullet, bulletIndex) => {
+      const dist = Math.hypot(bullet.x - boss.x, bullet.y - boss.y);
+      if (dist < bullet.radius + boss.radius) {
+        boss.health -= 1;
+        bullets.splice(bulletIndex, 1);
+        if (boss.health <= 0) {
+          boss = null;
+          createExplosion(boss.x, boss.y);
+          round += 1; // Increment round
+          setTimeout(() => spawnBoss(), 3000); // Spawn new boss after 3 seconds
+        }
+      }
+    });
+
+    // Check collision with player
+    const dist = Math.hypot(player.x - boss.x, player.y - boss.y);
+    if (dist < player.radius + boss.radius) {
+      endGame();
+    }
+
+    // Draw boss health bar
+    drawBossHealthBar();
+  }
+}
+
 // Explosion animation
 function createExplosion(x, y) {
   explosions.push({
@@ -265,40 +375,45 @@ function gameLoop() {
       drawBullet(bullet);
     });
 
-    // Draw and move enemies
-    enemies.forEach((enemy, index) => {
-      enemy.x += enemy.dx;
-      enemy.y += enemy.dy;
+    // Draw and move enemies (only if boss is not spawned)
+    if (!boss) {
+      enemies.forEach((enemy, index) => {
+        enemy.x += enemy.dx;
+        enemy.y += enemy.dy;
 
-      // Draw enemy
-      drawEnemy(enemy);
+        // Draw enemy
+        drawEnemy(enemy);
 
-      // Check collision with player
-      const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-      if (dist < player.radius + enemy.radius) {
-        endGame();
-      }
-
-      // Check collision with bullets
-      bullets.forEach((bullet, bulletIndex) => {
-        const bulletDist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
-        if (bulletDist < bullet.radius + enemy.radius) {
-          // Remove enemy and bullet
-          enemies.splice(index, 1);
-          bullets.splice(bulletIndex, 1);
-          // Create explosion
-          createExplosion(enemy.x, enemy.y);
+        // Check collision with player
+        const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+        if (dist < player.radius + enemy.radius) {
+          endGame();
         }
+
+        // Check collision with bullets
+        bullets.forEach((bullet, bulletIndex) => {
+          const bulletDist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+          if (bulletDist < bullet.radius + enemy.radius) {
+            // Remove enemy and bullet
+            enemies.splice(index, 1);
+            bullets.splice(bulletIndex, 1);
+            // Create explosion
+            createExplosion(enemy.x, enemy.y);
+          }
+        });
       });
-    });
+
+      // Spawn enemies (only if boss is not spawned)
+      if (Math.random() < enemySpawnRate) {
+        spawnEnemy();
+      }
+    }
+
+    // Draw boss
+    drawBoss();
 
     // Draw explosions
     drawExplosions();
-
-    // Spawn enemies
-    if (Math.random() < enemySpawnRate) {
-      spawnEnemy();
-    }
 
     // Update timer
     updateTimer();
