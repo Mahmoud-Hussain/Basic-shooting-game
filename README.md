@@ -31,50 +31,57 @@ Simply open it in a browser and start playing! Perfect for learning the basics o
 └── assets/ # (Optional) Media files (images, sounds)
 
 
----
-
 ## 🚀 How to Run Locally
 
-1. **Clone the repo**:
-   ```bash
-   git clone https://github.com/Mahmoud-Hussain/Basic-shooting-game.git
-   cd Basic-shooting-game
+**Open in browser:**
+- Double-click `index.html`
+- Or right-click → **Open with** → select your browser.
 
-1. **Open in browser**:
-
-Double-click index.html
-Or right-click → Open with → select your browser.
 ✅ No installation, build tools, or dependencies required.
 
-##  🛠 Development Notes
+---
 
-Written in vanilla JavaScript — easy to read and modify.
-Uses <canvas> for rendering.
-Can be extended with:
-Score counter
-Difficulty levels
-Mobile touch controls
-High-score tracking (via localStorage)
-Background music & sound effects
+## 🛠 Development Notes
+
+- Written in **vanilla JavaScript** — easy to read and modify.
+- Uses `<canvas>` for rendering.
+- Can be extended with:
+  - Score counter
+  - Difficulty levels
+  - Mobile touch controls
+  - High-score tracking (via `localStorage`)
+  - Background music & sound effects
+
+---
 
 ## 📌 Roadmap
 
- Add enemy waves and increasing difficulty
- Implement health and lives
- Add restart menu after game over
- Responsive scaling for different screen sizes
- Particle effects for explosions
+- [ ] Add enemy waves and increasing difficulty
+- [ ] Implement health and lives
+- [ ] Add restart menu after game over
+- [ ] Responsive scaling for different screen sizes
+- [ ] Particle effects for explosions
 
+---
 
- ## 🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome!
-Fork the repo
-Create a new branch (feature/new-feature)
-Commit and push
-Submit a pull request
+
+1. Fork the repo
+2. Create a new branch (`feature/new-feature`)
+3. Commit and push
+4. Submit a pull request
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License** — feel free to modify and share.
+
+---
 
 ## 👤 Author
 
-Mahmoud Hussain
-🔗 GitHub Profile
+**Mahmoud Hussain**  
+🔗 [GitHub Profile](https://github.com/Mahmoud-Hussain)
