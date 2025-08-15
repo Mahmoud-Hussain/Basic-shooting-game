@@ -7,7 +7,9 @@ Simply open it in a browser and start playing! Perfect for learning the basics o
 
 ## 📸 Game Preview
 
-![Basic Shooting Game Screenshot](e2436d01-ae7b-46f9-a080-5a57527b6a78.png)
+<p align="center">
+    <img src="game.png" alt="Image 1" width="45%">
+</p>
 
 ---
 
